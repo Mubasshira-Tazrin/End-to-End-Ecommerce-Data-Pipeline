@@ -1,0 +1,18 @@
+# dbt connection profile — reads all values from environment variables
+# (supplied by deploy/.env via docker-compose). No secrets committed here.
+# Auth = OAuth Machine-to-Machine using the `airbyte-sp` service principal
+# (same one already granted on the `retail` catalog).
+
+retail:
+  target: dev
+  outputs:
+    dev:
+      type: databricks
+      host: "{{ env_var('DBX_HOST') }}"              # dbc-xxxx.cloud.databricks.com (no https://)
+      http_path: "{{ env_var('DBX_HTTP_PATH') }}"    # /sql/1.0/warehouses/xxxx
+      catalog: "{{ env_var('DBX_CATALOG') }}"        # retail
+      schema: silver                                 # default target schema (marts override to gold)
+      auth_type: oauth                               # OAuth M2M (service principal)
+      client_id: "{{ env_var('DBX_CLIENT_ID') }}"    # airbyte-sp Application ID
+      client_secret: "{{ env_var('DBX_CLIENT_SECRET') }}"
+      threads: 4

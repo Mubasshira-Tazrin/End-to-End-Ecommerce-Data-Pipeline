@@ -1,0 +1,45 @@
+# Retail Analytics POC — Docker services
+# Step 2 adds the source Postgres. Airflow/Metabase get added in later steps.
+
+services:
+  source-postgres:
+    image: postgres:16                      # official Postgres 16 image, pulled automatically
+    container_name: retail-source-postgres
+    restart: unless-stopped
+    environment:                            # these create the DB + superuser on first boot
+      POSTGRES_USER: ${SOURCE_PG_USER}
+      POSTGRES_PASSWORD: ${SOURCE_PG_PASSWORD}
+      POSTGRES_DB: ${SOURCE_PG_DB}
+    command: ["postgres", "-c", "wal_level=logical"]   # enables Airbyte CDC later (harmless now)
+    ports:
+      - "${SOURCE_PG_PORT}:5432"            # reach it from the host at localhost:5433
+    volumes:
+      - pgdata-source:/var/lib/postgresql/data                 # persists data across restarts
+      - ../source/ddl:/docker-entrypoint-initdb.d:ro           # auto-runs our DDL+seed on first boot
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${SOURCE_PG_USER} -d $${SOURCE_PG_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # dbt runtime (Phases 3-4). Connects OUT to Databricks — not a long-running
+  # service, so it lives behind the `tools` profile and is invoked on demand:
+  #   docker compose --profile tools run --rm dbt debug
+  dbt:
+    build:
+      context: ./dbt                       # uses deploy/dbt/Dockerfile
+    image: retail-dbt
+    container_name: retail-dbt
+    profiles: ["tools"]                    # excluded from plain `docker compose up`
+    environment:                           # Databricks connection, read by dbt/profiles.yml
+      DBX_HOST: ${DBX_HOST}
+      DBX_HTTP_PATH: ${DBX_HTTP_PATH}
+      DBX_CATALOG: ${DBX_CATALOG}
+      DBX_CLIENT_ID: ${DBX_CLIENT_ID}
+      DBX_CLIENT_SECRET: ${DBX_CLIENT_SECRET}
+    volumes:
+      - ../dbt:/workspace/dbt              # live-mount the project (profiles.yml + retail/)
+    working_dir: /workspace/dbt/retail
+
+volumes:
+  pgdata-source:            # named volume; survives `down`, wiped only with `down -v`

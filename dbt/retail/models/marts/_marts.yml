@@ -1,0 +1,71 @@
+version: 2
+
+models:
+  - name: dim_customer
+    description: "Gold: customer dimension (SCD-1). One row per customer, surrogate customer_key."
+    columns:
+      - name: customer_key
+        description: "Surrogate key (hash of customer_id). FK target for fact_sales."
+        tests: [unique, not_null]
+      - name: customer_id
+        description: "Natural key from source."
+        tests: [unique, not_null]
+      - name: full_name
+        description: "first_name + last_name."
+
+  - name: dim_product
+    description: "Gold: product dimension (SCD-1). One row per product, surrogate product_key."
+    columns:
+      - name: product_key
+        description: "Surrogate key (hash of product_id). FK target for fact_sales."
+        tests: [unique, not_null]
+      - name: product_id
+        description: "Natural key from source."
+        tests: [unique, not_null]
+
+  - name: dim_date
+    description: "Gold: continuous calendar spanning order dates. One row per day."
+    columns:
+      - name: date_key
+        description: "Integer date key yyyyMMdd. FK target for fact_sales."
+        tests: [unique, not_null]
+      - name: date
+        description: "Calendar date."
+        tests: [not_null]
+
+  - name: fact_sales
+    description: "Gold: sales fact at order-line grain. FKs to customer/product/date dims."
+    columns:
+      - name: sales_key
+        description: "Surrogate key (hash of order_item_id). Unique per fact row."
+        tests: [unique, not_null]
+      - name: customer_key
+        description: "FK to dim_customer.customer_key."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_customer')
+                field: customer_key
+      - name: product_key
+        description: "FK to dim_product.product_key."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_product')
+                field: product_key
+      - name: date_key
+        description: "FK to dim_date.date_key."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('dim_date')
+                field: date_key
+      - name: quantity
+        description: "Units for this line."
+        tests: [not_null]
+      - name: line_amount
+        description: "quantity * unit_price."
+        tests: [not_null]

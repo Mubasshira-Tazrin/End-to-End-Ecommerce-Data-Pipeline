@@ -1,0 +1,16 @@
+version: 2
+
+# Bronze = the raw tables Airbyte lands in Databricks `retail.raw.*`.
+# Declared as dbt SOURCES so Silver models can {{ source('bronze', ...) }} them.
+# We NEVER write to Bronze from dbt — it is read-only (owned by Airbyte).
+sources:
+  - name: bronze
+    description: "Raw source tables landed by Airbyte (unmodified). Includes Airbyte metadata columns."
+    database: "{{ env_var('DBX_CATALOG') }}"   # catalog: retail
+    schema: raw                                 # -> retail.raw.*
+    tables:
+      - name: customers
+      - name: products
+      - name: orders
+      - name: order_items
+      - name: payments

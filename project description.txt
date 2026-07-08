@@ -1,0 +1,170 @@
+Data Engineering Onboarding Project
+Objective
+Build an end-to-end Retail Analytics Data Platform that ingests data from source systems,
+transforms it using a Medallion Architecture, orchestrates pipelines with Airflow, and delivers
+business insights through dashboards.
+Project Architecture1. Source Setup
+Goal
+Create the source system for the project. The database should contain customer, product, order,
+and payment data that will be used throughout the pipeline.
+Requirements
+●​
+●​
+●​
+●​
+Setup PostgreSQL
+Create source tables
+Load sample CSV data
+Load data from a public API using Python
+Deliverables
+●​ PostgreSQL Database
+●​ Data Loading Script
+2. Data Ingestion
+Goal
+Build an ingestion layer that automatically moves data from PostgreSQL into Databricks Bronze
+tables.
+Requirements
+●​
+●​
+●​
+●​
+Setup Airbyte
+Configure Source and Destination
+Create Full Refresh Sync
+Configure Incremental Sync
+Deliverables
+●​ Working Airbyte Pipeline3. Databricks Medallion Architecture
+Goal
+Organize data using Bronze, Silver, and Gold layers following modern Lakehouse architecture
+principles.
+Requirements
+Bronze Layer
+Store raw source data without modifications.
+Silver Layer
+Apply data quality and standardization rules:
+●​ Remove duplicates
+●​ Handle null values
+●​ Standardize columns and data types
+Gold Layer
+Create business-ready tables for reporting:
+●​ dim_customer
+●​ dim_product
+●​ fact_sales
+Deliverables
+●​ Bronze, Silver, and Gold Layers4. DBT Development
+Goal
+Implement transformation logic using dbt and establish model dependencies between layers.
+Requirements
+●​
+●​
+●​
+●​
+Create dbt models
+Build Silver transformations
+Build Gold business models
+Add tests and documentation
+Deliverables
+●​ dbt Project
+●​ dbt Tests
+●​ dbt Documentation
+5. Airflow Pipeline Orchestration
+Goal
+Automate the end-to-end workflow so that ingestion and transformations run in the correct
+sequence.
+Pipeline Flow
+Airbyte Sync
+↓
+DBT Silver
+↓
+DBT GoldRequirements
+●​ Setup Airflow
+●​ Configure Cosmos
+●​ Build orchestration DAG
+Deliverables
+●​ Airflow DAG
+6. Version Control & CI/CD
+Goal
+Manage project code using GitLab and automate validation through CI/CD.
+Requirements
+●​
+●​
+●​
+●​
+Create repository
+Use feature branches
+Create merge requests
+Configure CI/CD validation
+Deliverables
+●​ GitLab Repository
+●​ CI/CD Pipeline7. Data Quality & Monitoring
+Goal
+Ensure data accuracy and provide visibility into pipeline execution and failures.
+Requirements
+Implement:
+●​
+●​
+●​
+●​
+Row Count Validation
+Duplicate Checks
+Null Checks
+Source vs Target Reconciliation
+Monitor:
+●​ Airflow Logs
+●​ Airbyte Logs
+●​ dbt Logs
+Deliverables
+●​ Data Quality Framework
+●​ Monitoring Guide8. Reporting
+Goal
+Provide business users with insights from the Gold Layer through a dashboard.
+Requirements
+Create a Power BI Dashboard showing:
+●​
+●​
+●​
+●​
+●​
+Total Sales
+Total Orders
+Total Customers
+Sales Trend
+Product Performance
+Deliverables
+●​ Power BI Dashboard
+9. Documentation
+Goal
+Document the solution so that another engineer can understand, operate, and maintain the
+platform.
+Requirements
+Create:
+●​
+●​
+●​
+●​
+Architecture Diagram
+Setup Guide
+Data Dictionary
+Runbook
+Deliverables
+●​ Project Documentation10. Final Assignment
+Goal
+Demonstrate understanding of the complete solution by presenting the architecture,
+implementation approach, challenges, and outcomes.
+Presentation Topics
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+●​
+Solution Architecture
+Data Flow
+Airbyte Pipeline
+dbt Models
+Airflow Orchestration
+Data Quality Strategy
+Dashboard Walkthrough
+Key Learnings

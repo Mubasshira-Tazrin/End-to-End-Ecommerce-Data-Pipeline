@@ -1,0 +1,97 @@
+version: 2
+
+models:
+  - name: stg_customers
+    description: "Silver: deduped, standardized customers (one row per customer_id)."
+    columns:
+      - name: customer_id
+        description: "Natural key from the source customers table."
+        tests: [unique, not_null]
+      - name: email
+        description: "Lower-cased, trimmed email."
+        tests: [not_null]
+      - name: country
+        description: "Upper-cased country name/code."
+
+  - name: stg_products
+    description: "Silver: deduped, standardized products (one row per product_id)."
+    columns:
+      - name: product_id
+        description: "Natural key from the source products table."
+        tests: [unique, not_null]
+      - name: price
+        description: "Unit price, decimal(10,2)."
+        tests: [not_null]
+
+  - name: stg_orders
+    description: "Silver: deduped, standardized orders (one row per order_id)."
+    columns:
+      - name: order_id
+        description: "Natural key from the source orders table."
+        tests: [unique, not_null]
+      - name: customer_id
+        description: "FK to stg_customers.customer_id."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_customers')
+                field: customer_id
+      - name: status
+        description: "Order status, upper-cased."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['COMPLETED', 'PENDING', 'CANCELLED', 'RETURNED']
+
+  - name: stg_order_items
+    description: "Silver: cleaned order line items (grain: one row per order_item_id)."
+    columns:
+      - name: order_item_id
+        description: "Natural key from the source order_items table."
+        tests: [unique, not_null]
+      - name: order_id
+        description: "FK to stg_orders.order_id."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: product_id
+        description: "FK to stg_products.product_id."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_products')
+                field: product_id
+      - name: quantity
+        description: "Units ordered (> 0 in source)."
+
+  - name: stg_payments
+    description: "Silver: deduped, standardized payments (one row per payment_id)."
+    columns:
+      - name: payment_id
+        description: "Natural key from the source payments table."
+        tests: [unique, not_null]
+      - name: order_id
+        description: "FK to stg_orders.order_id."
+        tests:
+          - not_null
+          - relationships:
+              arguments:
+                to: ref('stg_orders')
+                field: order_id
+      - name: payment_method
+        description: "Payment method, upper-cased."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['CARD', 'PAYPAL', 'BANK_TRANSFER', 'CASH']
+      - name: payment_status
+        description: "Payment status, upper-cased."
+        tests:
+          - accepted_values:
+              arguments:
+                values: ['PAID', 'PENDING', 'REFUNDED']

@@ -1,0 +1,27 @@
+name: 'retail'
+version: '1.0.0'
+config-version: 2
+profile: 'retail'
+
+model-paths: ["models"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+test-paths: ["tests"]
+
+target-path: "target"
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+# Medallion layout: staging = Silver (cleaning), marts = Gold (star schema).
+# +schema sets the exact Databricks schema (see macros/generate_schema_name.sql).
+models:
+  retail:
+    staging:
+      +materialized: view
+      +schema: silver
+      +tags: ["silver"]
+    marts:
+      +materialized: table
+      +schema: gold
+      +tags: ["gold"]
