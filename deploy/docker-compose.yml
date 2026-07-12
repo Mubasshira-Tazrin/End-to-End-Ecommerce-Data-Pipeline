@@ -22,6 +22,86 @@ services:
       timeout: 5s
       retries: 5
 
+  # Airflow's own metadata DB (Phase 5) — internal bookkeeping only (DAG runs,
+  # task state, users). Completely separate from source-postgres; no host port
+  # published since only Airflow services need to reach it.
+  airflow-meta-postgres:
+    image: postgres:16
+    container_name: retail-airflow-meta-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${AIRFLOW_PG_USER}
+      POSTGRES_PASSWORD: ${AIRFLOW_PG_PASSWORD}
+      POSTGRES_DB: ${AIRFLOW_PG_DB}
+    volumes:
+      - pgdata-airflow:/var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U $${AIRFLOW_PG_USER} -d $${AIRFLOW_PG_DB}"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+        # Airflow init (Phase 5) — runs ONCE: creates the metadata DB tables and an
+  # admin login, then exits (status 0 = success). Scheduler/webserver will
+  # wait for this to finish before they start.
+  airflow-init:
+    build:
+      context: ./airflow                    # uses deploy/airflow/Dockerfile
+    image: retail-airflow
+    container_name: retail-airflow-init
+    depends_on:
+      airflow-meta-postgres:
+        condition: service_healthy
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_PG_USER}:${AIRFLOW_PG_PASSWORD}@airflow-meta-postgres:5432/${AIRFLOW_PG_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      _AIRFLOW_DB_MIGRATE: "true"
+      _AIRFLOW_WWW_USER_CREATE: "true"
+      _AIRFLOW_WWW_USER_USERNAME: admin
+      _AIRFLOW_WWW_USER_PASSWORD: admin
+    entrypoint: /bin/bash
+    command: ["-c", "exec /entrypoint airflow version"]
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+
+  # Airflow Scheduler (Phase 5) — reads DAGs, decides when tasks run. No UI.
+  airflow-scheduler:
+    image: retail-airflow
+    container_name: retail-airflow-scheduler
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_PG_USER}:${AIRFLOW_PG_PASSWORD}@airflow-meta-postgres:5432/${AIRFLOW_PG_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+    command: scheduler
+
+  # Airflow Webserver (Phase 5) — the UI, http://localhost:8080 (admin/admin).
+  airflow-webserver:
+    image: retail-airflow
+    container_name: retail-airflow-webserver
+    restart: unless-stopped
+    depends_on:
+      airflow-init:
+        condition: service_completed_successfully
+    environment:
+      AIRFLOW__CORE__EXECUTOR: LocalExecutor
+      AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_PG_USER}:${AIRFLOW_PG_PASSWORD}@airflow-meta-postgres:5432/${AIRFLOW_PG_DB}
+      AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+    ports:
+      - "8080:8080"
+    volumes:
+      - ../airflow/dags:/opt/airflow/dags
+    command: webserver
+
+
+
+  # dbt runtime (Phases 3-4). Connects OUT to Databricks — not a long-running
+
   # dbt runtime (Phases 3-4). Connects OUT to Databricks — not a long-running
   # service, so it lives behind the `tools` profile and is invoked on demand:
   #   docker compose --profile tools run --rm dbt debug
@@ -40,6 +120,7 @@ services:
     volumes:
       - ../dbt:/workspace/dbt              # live-mount the project (profiles.yml + retail/)
     working_dir: /workspace/dbt/retail
-
+    
 volumes:
   pgdata-source:            # named volume; survives `down`, wiped only with `down -v`
+  pgdata-airflow:           # Airflow metadata DB storage

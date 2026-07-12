@@ -1,11 +1,21 @@
 
   
+    
+        create or replace table `retail`.`silver`.`stg_payments`
+      
+      
+    using delta
   
-  
-  create or replace view `retail`.`silver`.`stg_payments`
-  
-  as (
-    -- Silver: cleaned & standardized payments. Method + status upper-cased to stable codes.
+      
+      
+      
+      
+      
+      
+      
+      
+      as
+      -- Silver: cleaned & standardized payments. Method + status upper-cased to stable codes.
 with source as (
     select * from `retail`.`raw`.`payments`
 ),
@@ -31,4 +41,4 @@ select
     cast(updated_at as timestamp)           as updated_at
 from deduped
 where _rn = 1
-  )
+  

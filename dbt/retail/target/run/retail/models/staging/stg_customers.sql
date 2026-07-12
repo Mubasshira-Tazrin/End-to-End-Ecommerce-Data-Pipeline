@@ -1,11 +1,21 @@
 
   
+    
+        create or replace table `retail`.`silver`.`stg_customers`
+      
+      
+    using delta
   
-  
-  create or replace view `retail`.`silver`.`stg_customers`
-  
-  as (
-    -- Silver: cleaned & standardized customers.
+      
+      
+      
+      
+      
+      
+      
+      
+      as
+      -- Silver: cleaned & standardized customers.
 -- Dedupe (keep latest by updated_at), trim strings, lower-case email, upper-case country code.
 with source as (
     select * from `retail`.`raw`.`customers`
@@ -34,4 +44,4 @@ select
     cast(updated_at as timestamp)           as updated_at
 from deduped
 where _rn = 1
-  )
+  

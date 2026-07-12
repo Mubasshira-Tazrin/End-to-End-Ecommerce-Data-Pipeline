@@ -180,3 +180,79 @@ docker compose run --rm dbt run
 - Airbyte→Postgres: use gateway IP `172.19.0.1`, not localhost; SSL `disable`.
 - Airbyte→Databricks: PAT auth broken on Free Edition → use OAuth service principal + `GRANT ALL PRIVILEGES ON CATALOG`.
 - dbt schema names: need the `generate_schema_name` macro or dbt concatenates them.
+
+# Session Summary -- E-commerce Data Pipeline (Airflow Deployment)
+
+## Overview
+
+This session focused on deploying **Apache Airflow** for the end-to-end
+e-commerce data pipeline after successfully completing the Airbyte
+ingestion and dbt Silver/Gold layers.
+
+## Completed Work
+
+-   Fixed a broken `ref('stg_orders')` relationship test in dbt.
+-   Reviewed how `dbt build` executes models and tests in dependency
+    order.
+-   Discussed dbt macros (`ref`, `source`, `dbt_utils`, custom macros).
+-   Explained why Airbyte is deployed separately from Docker Compose
+    (kind cluster via `abctl`).
+-   Reviewed the dbt Power User VS Code extension and its Docker
+    limitations.
+-   Successfully built the Gold layer (`dim_customer`, `dim_product`,
+    `dim_date`, `fact_sales`).
+-   Generated and served dbt documentation to visualize the lineage
+    graph.
+-   Designed the Airflow orchestration pipeline:
+    -   Airbyte Sync
+    -   dbt Silver
+    -   dbt Gold
+    -   Data Quality (future phase)
+
+## Airflow Infrastructure
+
+Created: - Custom Airflow Docker image - Docker Compose services -
+Metadata PostgreSQL database - Scheduler - Webserver - Init container -
+Sanity DAG - Environment variables for Airflow metadata database
+
+## Deployment Progress
+
+Initial deployment failed because: - `AIRFLOW_PG_USER` -
+`AIRFLOW_PG_PASSWORD` - `AIRFLOW_PG_DB`
+
+were not being loaded from `.env`.
+
+After verifying the Compose configuration and recreating the metadata
+volume:
+
+``` bash
+docker compose down
+docker volume rm deploy_pgdata-airflow
+docker compose up -d
+```
+
+The metadata database initialized successfully.
+
+## Current Status
+
+-   ✅ airflow-meta database is healthy
+-   ❌ airflow-init exits with code 127
+-   ⏸ Scheduler and Webserver cannot start until init succeeds
+
+## Next Steps
+
+1.  Inspect `airflow-init` logs:
+
+    ``` bash
+    docker compose --profile airflow logs airflow-init
+    ```
+
+2.  Fix the init container startup command.
+
+3.  Verify:
+
+    -   Airflow Webserver
+    -   Scheduler
+    -   Sanity DAG
+
+4.  Implement `retail_pipeline.py` using Cosmos and Airbyte integration.

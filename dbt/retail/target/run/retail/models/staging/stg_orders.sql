@@ -1,11 +1,21 @@
 
   
+    
+        create or replace table `retail`.`silver`.`stg_orders`
+      
+      
+    using delta
   
-  
-  create or replace view `retail`.`silver`.`stg_orders`
-  
-  as (
-    -- Silver: cleaned & standardized orders. Status upper-cased to a stable code.
+      
+      
+      
+      
+      
+      
+      
+      
+      as
+      -- Silver: cleaned & standardized orders. Status upper-cased to a stable code.
 with source as (
     select * from `retail`.`raw`.`orders`
 ),
@@ -30,4 +40,4 @@ select
     cast(updated_at as timestamp)           as updated_at
 from deduped
 where _rn = 1
-  )
+  

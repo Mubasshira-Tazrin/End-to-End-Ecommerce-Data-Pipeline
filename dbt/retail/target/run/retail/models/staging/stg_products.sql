@@ -1,11 +1,21 @@
 
   
+    
+        create or replace table `retail`.`silver`.`stg_products`
+      
+      
+    using delta
   
-  
-  create or replace view `retail`.`silver`.`stg_products`
-  
-  as (
-    -- Silver: cleaned & standardized products.
+      
+      
+      
+      
+      
+      
+      
+      
+      as
+      -- Silver: cleaned & standardized products.
 with source as (
     select * from `retail`.`raw`.`products`
 ),
@@ -31,4 +41,4 @@ select
     cast(updated_at as timestamp)           as updated_at
 from deduped
 where _rn = 1
-  )
+  

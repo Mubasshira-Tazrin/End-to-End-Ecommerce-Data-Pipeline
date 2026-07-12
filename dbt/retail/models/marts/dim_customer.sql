@@ -7,7 +7,7 @@ with customers as (
 select
     {{ dbt_utils.generate_surrogate_key(['customer_id']) }} as customer_key,
     customer_id,
-    concat_ws(' ', first_name, last_name)   as full_name,
+    concat_ws(' ', first_na❌ Search by date and keyword together.me, last_name)   as full_name,
     email,
     city,
     country,

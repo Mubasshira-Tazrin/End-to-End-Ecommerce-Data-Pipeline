@@ -18,7 +18,7 @@ clean-targets:
 models:
   retail:
     staging:
-      +materialized: view
+      +materialized: table
       +schema: silver
       +tags: ["silver"]
     marts:

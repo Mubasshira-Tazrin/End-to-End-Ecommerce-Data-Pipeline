@@ -1,11 +1,21 @@
 
   
+    
+        create or replace table `retail`.`silver`.`stg_order_items`
+      
+      
+    using delta
   
-  
-  create or replace view `retail`.`silver`.`stg_order_items`
-  
-  as (
-    -- Silver: cleaned order line items. No updated_at in source, so dedupe on the PK itself
+      
+      
+      
+      
+      
+      
+      
+      
+      as
+      -- Silver: cleaned order line items. No updated_at in source, so dedupe on the PK itself
 -- (order_item_id is a strictly-increasing serial and unique — this just guards against
 -- Airbyte append duplicates).
 with source as (
@@ -31,4 +41,4 @@ select
     cast(unit_price as decimal(10,2))       as unit_price
 from deduped
 where _rn = 1
-  )
+  
