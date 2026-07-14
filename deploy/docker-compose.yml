@@ -76,8 +76,17 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_PG_USER}:${AIRFLOW_PG_PASSWORD}@airflow-meta-postgres:5432/${AIRFLOW_PG_DB}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
+      DBX_HOST: ${DBX_HOST}
+      DBX_HTTP_PATH: ${DBX_HTTP_PATH}
+      DBX_CATALOG: ${DBX_CATALOG}
+      DBX_CLIENT_ID: ${DBX_CLIENT_ID}
+      DBX_CLIENT_SECRET: ${DBX_CLIENT_SECRET}
     volumes:
       - ../airflow/dags:/opt/airflow/dags
+      - ../dbt:/opt/airflow/dbt
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     command: scheduler
 
   # Airflow Webserver (Phase 5) — the UI, http://localhost:8080 (admin/admin).
@@ -92,15 +101,12 @@ services:
       AIRFLOW__CORE__EXECUTOR: LocalExecutor
       AIRFLOW__DATABASE__SQL_ALCHEMY_CONN: postgresql+psycopg2://${AIRFLOW_PG_USER}:${AIRFLOW_PG_PASSWORD}@airflow-meta-postgres:5432/${AIRFLOW_PG_DB}
       AIRFLOW__CORE__LOAD_EXAMPLES: "false"
+      AIRFLOW__WEBSERVER__SECRET_KEY: ${AIRFLOW_SECRET_KEY}
     ports:
       - "8080:8080"
     volumes:
       - ../airflow/dags:/opt/airflow/dags
     command: webserver
-
-
-
-  # dbt runtime (Phases 3-4). Connects OUT to Databricks — not a long-running
 
   # dbt runtime (Phases 3-4). Connects OUT to Databricks — not a long-running
   # service, so it lives behind the `tools` profile and is invoked on demand:
